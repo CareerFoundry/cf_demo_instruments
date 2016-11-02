@@ -12,35 +12,35 @@ class PhotosViewController: UICollectionViewController, UICollectionViewDelegate
     let itemHeight = 200
     var images = [Int:UIImage]()
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "PushDetailsViewController" {
-            let detailsViewController = segue.destinationViewController as! DetailsViewController
+            let detailsViewController = segue.destination as! DetailsViewController
             detailsViewController.image = sender as? UIImage
         }
     }
     
     // MARK: UICollectionViewDataSource
     
-    override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return 1000
     }
     
-    override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCollectionViewCellIdentifier", forIndexPath: indexPath) as! PhotoCollectionViewCell
-        let bounds = UIScreen.mainScreen().bounds
-        let itemWidth = CGRectGetWidth(bounds)
-        let url = NSURL(string: "http://lorempixel.com/\(Int(itemWidth))/\(itemHeight)/")!
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCollectionViewCellIdentifier", for: indexPath) as! PhotoCollectionViewCell
+        let bounds = UIScreen.main.bounds
+        let itemWidth = bounds.width
+        let url = URL(string: "http://lorempixel.com/\(Int(itemWidth))/\(itemHeight)/")!
         
-        if let image = images[indexPath.row] {
+        if let image = images[(indexPath as NSIndexPath).row] {
             cell.imageView.image = applyFiltersToImage(image)
         } else {
             cell.activityIndicatorView.startAnimating()
             
             fetchImageAtURL(url) { (image) in
-                NSOperationQueue.mainQueue().addOperationWithBlock({
+                OperationQueue.main.addOperation({
                     cell.activityIndicatorView.stopAnimating()
                     cell.imageView.image = self.applyFiltersToImage(image)
-                    self.images[indexPath.row] = image
+                    self.images[(indexPath as NSIndexPath).row] = image
                 })
             }
         }
@@ -50,29 +50,29 @@ class PhotosViewController: UICollectionViewController, UICollectionViewDelegate
     
     // MARK: UICollectionViewDataSource
     
-    override func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        performSegueWithIdentifier("PushDetailsViewController", sender: images[indexPath.item])
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "PushDetailsViewController", sender: images[(indexPath as NSIndexPath).item])
     }
     
     // MARK: UICollectionViewDelegateFlowLayout
     
-    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
-        let bounds = UIScreen.mainScreen().bounds
-        let itemWidth = CGRectGetWidth(bounds)
-        return CGSizeMake(itemWidth, CGFloat(itemHeight))
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let bounds = UIScreen.main.bounds
+        let itemWidth = bounds.width
+        return CGSize(width: itemWidth, height: CGFloat(itemHeight))
     }
 }
 
 extension PhotosViewController {
-    func fetchImageAtURL(url: NSURL, success: ((image: UIImage) -> Void)) {
-        NSURLSession.sharedSession().dataTaskWithURL(url) { (data, response, error) in
-            if let data = data, image = UIImage(data: data) {
-                success(image: image)
+    func fetchImageAtURL(_ url: URL, success: @escaping ((_ image: UIImage) -> Void)) {
+        URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
+            if let data = data, let image = UIImage(data: data) {
+                success(image)
             }
-        }.resume()
+        }) .resume()
     }
     
-    func applyFiltersToImage(image: UIImage) -> UIImage {
+    func applyFiltersToImage(_ image: UIImage) -> UIImage {
         let context = CIContext(options: nil)
         
         if let currentFilter = CIFilter(name: "CIPhotoEffectMono") {
@@ -80,8 +80,8 @@ extension PhotosViewController {
             currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
             
             if let output = currentFilter.outputImage {
-                let cgimg = context.createCGImage(output, fromRect: output.extent)
-                let processedImage = UIImage(CGImage: cgimg)
+                let cgimg = context.createCGImage(output, from: output.extent)
+                let processedImage = UIImage(cgImage: cgimg!)
                 return processedImage
             }
             

@@ -13,7 +13,7 @@ class TappableImageView: UIImageView {
         didSet {
             let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TappableImageView.tappedImage))
             addGestureRecognizer(tapGestureRecognizer)
-            userInteractionEnabled = true
+            isUserInteractionEnabled = true
         }
     }
     
