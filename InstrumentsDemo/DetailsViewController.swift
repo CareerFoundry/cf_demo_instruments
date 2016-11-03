@@ -18,7 +18,7 @@ class DetailsViewController: UIViewController {
         }
 
         imageView.tapHandler = {
-            self.navigationController?.popViewControllerAnimated(true)
+            _ = self.navigationController?.popViewController(animated: true)
         }
     }
 }
